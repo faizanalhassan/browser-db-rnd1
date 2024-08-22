@@ -1,43 +1,43 @@
 import {openDB} from 'idb';
-export const TOTAL_DOCS = 20_000;
+import {measureTime} from "./utils";
+export const TOTAL_DOCS = 5_000;
 const dbPromise = openDB('my-database', 2, {
-    upgrade(db, oldVersion) {
+    upgrade: measureTime((db, oldVersion) => {
         if (oldVersion < 1) {
             if (!db.objectStoreNames.contains('documents')) {
                 db.createObjectStore('documents', {keyPath: 'id'});
             }
         }
         if (oldVersion < 2) {
-            debugger;
             db.deleteObjectStore('documents');
             const store = db.createObjectStore('documents', {keyPath: 'id'});
             store.createIndex('scannables', 'scannables', {multiEntry: true});
 
         }
 
-    },
+    }, "upgrade"),
 });
 
-export const addDocuments = async (documents) => {
+export const addDocuments = measureTime(async (documents) => {
     const db = await dbPromise;
     const tx = db.transaction('documents', 'readwrite');
     const store = tx.objectStore('documents');
     documents.forEach((doc) => store.put(doc));
     await tx.done;
-};
+}, "addDocuments");
 
 
-export const getAllDocuments = async () => {
+export const getAllDocuments = measureTime(async () => {
     const db = await dbPromise;
     const tx = db.transaction('documents', 'readonly');
     const store = tx.objectStore('documents');
     const allDocs = await store.getAll();
     await tx.done;
     return allDocs;
-};
+}, "getAllDocuments");
 
 
-export const updateDocumentsWithScannables = async () => {
+export const updateDocumentsWithScannables = measureTime(async () => {
     const db = await dbPromise;
     const tx = db.transaction('documents', 'readwrite');
     const store = tx.objectStore('documents');
@@ -57,17 +57,18 @@ export const updateDocumentsWithScannables = async () => {
     });
     await tx.done;
     console.log('All documents updated with scannables.');
-}
-export const clearAllDocuments = async () => {
+}, "updateDocumentsWithScannables");
+
+export const clearAllDocuments = measureTime(async () => {
   const db = await dbPromise;
   const tx = db.transaction('documents', 'readwrite');
   const store = tx.objectStore('documents');
   store.clear(); // Clear all documents
   await tx.done;
   console.log('All documents cleared.');
-};
+}, "clearAllDocuments");
 
-export const generateDocuments = () => {
+export const generateDocuments = measureTime(() => {
   const documents = [];
   const possibleValues = ['prod1', 'prod2', 'prod3', 'prod4', 'prod5', 'prod6', 'prod7', 'prod8', 'prod9', 'prod10'];
 
@@ -93,4 +94,4 @@ export const generateDocuments = () => {
   }
 
   return documents;
-};
+}, "generateDocuments");
