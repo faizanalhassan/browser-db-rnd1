@@ -1,25 +1,49 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useState } from 'react';
+import { addDocuments, getAllDocuments } from './db';
 
-function App() {
+const generateDocuments = () => {
+  const documents = [];
+  for (let i = 0; i < 20000; i++) {
+    const doc = { id: i };
+    for (let j = 0; j < 50; j++) {
+      doc[`property${j + 1}`] = `Value ${j + 1}`;
+    }
+    documents.push(doc);
+  }
+  return documents;
+};
+
+const App = () => {
+  const [documents, setDocuments] = useState([]);
+
+  useEffect(() => {
+    const initializeData = async () => {
+      const existingDocs = await getAllDocuments();
+      if (existingDocs.length === 0) {
+        const docs = generateDocuments();
+        await addDocuments(docs);
+        console.log('20,000 documents added to IndexedDB');
+      }
+      const fetchedDocs = await getAllDocuments();
+      setDocuments(fetchedDocs);
+    };
+
+    initializeData();
+  }, []);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <h1>IndexedDB Example</h1>
+      <p>Displaying the first 10 documents:</p>
+      <ul>
+        {documents.slice(0, 10).map((doc) => (
+          <li key={doc.id}>
+            {doc.id}: {Object.values(doc).slice(1, 6).join(', ')}...
+          </li>
+        ))}
+      </ul>
     </div>
   );
-}
+};
 
 export default App;
