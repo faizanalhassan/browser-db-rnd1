@@ -1,7 +1,8 @@
 import React, {/*useEffect,*/ useState, /*useRef*/} from 'react';
 import * as pureDB from './db';
 import * as dexieDB from './db-dexie';
-import {measureTime/*, TOTAL_DOCS*/} from "./utils";
+import * as rxdbDexie from './db-rxdb-dexie';
+import {measureTime/*, TOTAL_DOCS*/, generateDocuments} from "./utils";
 
 
 const App = () => {
@@ -18,26 +19,34 @@ const App = () => {
     const startFlow = () => {
         /*if (isInitialized.current) return;
         isInitialized.current = true;*/
+        console.log("===============STARTING FLOW==================")
         if(!selectedDB){
             console.log("No database is selected. Returning...");
             return
         }
         let dbFunctions;
-        if (selectedDB === 'indexeddb') {
-            dbFunctions = pureDB;
-        } else {
+        if (selectedDB === 'rxdb-dexie') {
+            dbFunctions = rxdbDexie;
+            console.log("Selected rxdbDexie")
+        } else if (selectedDB === 'dexie') {
             dbFunctions = dexieDB;
+            console.log("Selected Dexie.")
+        } else {
+            dbFunctions = pureDB;
+            console.log("Selected Pure Index db.")
         }
         const initializeData = measureTime(async () => {
             await dbFunctions.clearAllDocuments(); // Clear existing documents
-            const docs = dbFunctions.generateDocuments(totalDocs); // Generate documents with scannables
+            const docs = generateDocuments(totalDocs); // Generate documents with scannables
             await dbFunctions.addDocuments(docs); // Add documents to IndexedDB
             console.log(`${totalDocs} documents added to IndexedDB`);
             const fetchedDocs = await dbFunctions.getAllDocuments();
             setDocuments(fetchedDocs);
         }, "initializeData");
 
-        initializeData();
+        initializeData().then(
+            () => console.log("===============FLOW END==================")
+        );
     };
 
     return (
@@ -52,7 +61,7 @@ const App = () => {
                     value={totalDocs}
                     onChange={handleTotalDocsChange}
                 />
-                <br />
+                <br/>
                 <label>
                     <input
                         type="radio"
@@ -70,6 +79,15 @@ const App = () => {
                         onChange={handleDBChange}
                     />
                     Dexie
+                </label>
+                <label>
+                    <input
+                        type="radio"
+                        value="rxdb-dexie"
+                        checked={selectedDB === 'rxdb-dexie'}
+                        onChange={handleDBChange}
+                    />
+                    rxdb (dexie)
                 </label>
             </div>
             <button onClick={startFlow}>Start</button>
