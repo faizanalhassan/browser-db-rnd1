@@ -36,7 +36,7 @@ export function measureTime(fn, fn_name) {
         });
     } else {
       const end = performance.now();   // End time for synchronous functions
-      console.log(`Function ${fn_name} took ${end - start}ms`);
+      console.log(getPrompt(end));
       return result;
     }
   };

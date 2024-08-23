@@ -1,6 +1,6 @@
 import {openDB} from 'idb';
 import {measureTime} from "./utils";
-export const TOTAL_DOCS = 5_000;
+
 const dbPromise = openDB('my-database', 2, {
     upgrade: measureTime((db, oldVersion) => {
         if (oldVersion < 1) {
@@ -24,7 +24,7 @@ export const addDocuments = measureTime(async (documents) => {
     const store = tx.objectStore('documents');
     documents.forEach((doc) => store.put(doc));
     await tx.done;
-}, "addDocuments");
+}, "addDocumentsIDB");
 
 
 export const getAllDocuments = measureTime(async () => {
@@ -34,7 +34,7 @@ export const getAllDocuments = measureTime(async () => {
     const allDocs = await store.getAll();
     await tx.done;
     return allDocs;
-}, "getAllDocuments");
+}, "getAllDocumentsIDB");
 
 
 export const updateDocumentsWithScannables = measureTime(async () => {
@@ -57,7 +57,7 @@ export const updateDocumentsWithScannables = measureTime(async () => {
     });
     await tx.done;
     console.log('All documents updated with scannables.');
-}, "updateDocumentsWithScannables");
+}, "updateDocumentsWithScannablesIDB");
 
 export const clearAllDocuments = measureTime(async () => {
   const db = await dbPromise;
@@ -66,13 +66,13 @@ export const clearAllDocuments = measureTime(async () => {
   store.clear(); // Clear all documents
   await tx.done;
   console.log('All documents cleared.');
-}, "clearAllDocuments");
+}, "clearAllDocumentsIDB");
 
-export const generateDocuments = measureTime(() => {
+export const generateDocuments = measureTime((total_docs) => {
   const documents = [];
   const possibleValues = ['prod1', 'prod2', 'prod3', 'prod4', 'prod5', 'prod6', 'prod7', 'prod8', 'prod9', 'prod10'];
 
-  for (let i = 0; i < 20000; i++) {
+  for (let i = 0; i < total_docs; i++) {
     const doc = { id: i };
     for (let j = 0; j < 50; j++) {
       doc[`property${j + 1}`] = `Value ${j + 1}`;
@@ -94,4 +94,4 @@ export const generateDocuments = measureTime(() => {
   }
 
   return documents;
-}, "generateDocuments");
+}, "generateDocumentsIDB");
